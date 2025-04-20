@@ -1,4 +1,4 @@
-# Structural Attack on DME− Signature Scheme
+# Structural Attack on DME^- Digital Signature Scheme
 
 This repository implements a structural attack against the DME-minus digital signature scheme. The attack uses polynomial system solving and Gröbner basis techniques to recover secret keys. Because Magma V2.21-5 does not support exponents larger than 2^(30), this toy example works over the finite field F_q with q = 2^14.
 
