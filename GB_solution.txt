@@ -1,0 +1,235 @@
+n := 14;
+q := 2^n;
+Fq<T> := FiniteField(q); // T is the generator of Fq
+p := PrimitivePolynomial(Fq, 2);
+Sq<x> := PolynomialRing(Fq);
+Sq!p;
+
+Fq2<u> := ext<Fq | p>; // Fq2 is an extension of Fq
+AssertAttribute(Fq2, "PowerPrinting", false);
+
+S_t<Rt1a, Rt2a, Rt3a, Rt4a,St1a, St2a, St3a, St4a,Rt1b, Rt2b, Rt3b, Rt4b,St1b, St2b, St3b, St4b,Kt1, Kt2, Kt3, Kt4, Lt1, Lt2, Lt3, Lt4,  
+Zt1, Zt2, Zt3, Zt4, Wt1, Wt2, Wt3, Wt4,Xt1, Xt2, Xt3, Xt4,Yt1, Yt2, Yt3,Yt4,Xt1b, Xt2b, Xt3b, Xt4b,Yt1b, Yt2b, Yt3b,Yt4b,H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, H12, H13, H14, 
+H15,H16, H33, H34, H35, H36, H37, H38, H39, H40, 
+H41, H42, H43, H44, H45, H46, H47, H48,H17,H18,H19,H20,H21,H22,H23,H24,H25,H26,H27,H28,H29,H30,H31,H32, H49,H50,H51,H52,
+H53,H54,H55,H56,H57,H58,H59,H60,H61,H62,H63,H64>:=PolynomialRing(Fq,112,"lex");
+
+// We expect exactly two terms: one constant (monomial 1) and one variable.
+IsVarPlusConstant := function(f)
+    
+    mons := Monomials(f);
+    coefs := Coefficients(f);
+    
+    if #mons ne 2 then
+        return false, _, _;
+    end if;
+    
+    // Find the index corresponding to the constant term
+    idx_const := [i : i in [1..#mons] | mons[i] eq 1];
+    if #idx_const ne 1 then
+        return false, _, _;
+        
+    end if;
+    
+    
+    // The remaining term should be the variable term.
+    idx_var := [i : i in [1..#mons] | mons[i] ne 1];
+    if #idx_var ne 1 then
+        return false, _, _;
+        
+    end if;
+    
+    // Check that the nonconstant term is exactly one variable to the first power.
+    supp := Support(mons[idx_var[1]]);
+    if #supp ne 1 then
+        return false, _, _;
+    end if;
+    exps := [x: x in Exponents(mons[idx_var[1]])| x ne 0];
+    if exps[1] ne 1 then
+        return false, _, _;
+    end if;
+    
+    // Check that the coefficient of the variable is 1.
+    if coefs[idx_var[1]] ne 1 then
+        return false, _, _;
+    end if;
+    
+    // If all conditions are met, then f = var + c.
+    return true, Name(S_t,supp[1]), coefs[idx_const[1]];
+end function;
+
+
+
+load "result_replaced.txt";
+
+GB:=GroebnerBasis(list_1 cat list_2 cat list_3 cat list_4 cat list_1h cat list_2h cat list_3h cat list_4h);
+
+
+
+subs := AssociativeArray();
+names_S_t := [x : x in OrderedGenerators(S_t)];
+for i in [1..#names_S_t] do
+ subs[names_S_t[i]]:=names_S_t[i];
+end for;
+for x in GB do
+    if IsVarPlusConstant(x) then
+        flag, varName, constVal:=IsVarPlusConstant(x);
+        subs[varName]:=constVal;
+    end if;
+end for;
+gens := OrderedGenerators(S_t);
+substitution_list := [ subs[g] : g in gens ];
+
+
+get_solution:=function(GB,subs)
+substitution_list := [ subs[g] : g in gens ];
+    for x in GB do 
+        flag, varName, constVal:=IsVarPlusConstant(x);
+        if flag eq true then 
+            subs[varName]:=constVal;
+            substitution_list := [ subs[g] : g in gens ];
+        end if;
+    end for;
+    updt_GB:=[Evaluate(x,substitution_list) : x in GB];
+    updt_GB:=[x : x in updt_GB | x ne 0];
+    return subs;
+end function;
+
+simplify_list:=function(list,subs)
+    substitution_list := [ subs[g] : g in gens ];
+    updt_list:=[Evaluate(x,substitution_list) : x in list];
+    updt_list:=[x : x in updt_list | x ne 0];
+return updt_list;
+end function;
+
+
+
+
+
+
+//list_R:=[Rt3b+Rt3a^4,Rt4b+Rt4a^4,St3b+St3a^4,St4b+St4a^4];
+list_X:=[Xt3b+Xt3^2,Xt4b+Xt4^2,Yt3b+Yt3^2,Yt4b+Yt4^2];
+
+eval_list_S_t:=OrderedGenerators(S_t);
+    i:=Index(Names(S_t),"Rt3b");
+    eval_list_S_t[i]:=Rt3a^4;
+    i:=Index(Names(S_t),"Rt4b");
+    eval_list_S_t[i]:=Rt4a^4;
+    i:=Index(Names(S_t),"St3b");
+    eval_list_S_t[i]:=St3a^4;
+    i:=Index(Names(S_t),"St4b");
+    eval_list_S_t[i]:=St4a^4;
+      i:=Index(Names(S_t),"Xt3b");
+    eval_list_S_t[i]:=Xt3^2;
+    i:=Index(Names(S_t),"Yt3b");
+    eval_list_S_t[i]:=Yt3^2;
+    i:=Index(Names(S_t),"Xt4b");
+    eval_list_S_t[i]:=Xt4^2;
+    i:=Index(Names(S_t),"Yt4b");
+    eval_list_S_t[i]:=Yt4^2;
+
+
+GB_2:=[GB[i] :  i in [3,4,7,8,11,12,15,16]];
+GB_1_ev:=GroebnerBasis([Evaluate(x,eval_list_S_t): x in GB_2]);
+GB_1:=[GB_1_ev[i]: i in [5..8]];
+
+gcd:=Gcd(Yt4^q+Yt4,Reverse(GB_1)[1]);
+
+
+sol_yt4:=[x[1]: x in Factorization(gcd)];
+
+
+sol_variables:=[];
+for x in sol_yt4[2..4] do //exclude yt4:=0
+
+subs_b:=get_solution([x],subs);
+
+GB_1_new:=simplify_list(GB_1,subs_b);
+subs_b:=get_solution(GB_1_new,subs_b);
+list_X_new:=simplify_list(list_X,subs_b);
+subs_b:=get_solution(list_X_new,subs_b);
+GB_2_new:=simplify_list(GB_2,subs_b);
+subs_b:=get_solution(GB_2_new,subs_b);
+GB_new:=simplify_list(GB,subs_b);
+subs_b:=get_solution(GB_new,subs_b);
+GB_new:=simplify_list(GB_new,subs_b);
+GB_new:=GroebnerBasis(GB_new);
+if GB_new ne [1] then
+    subs_b:=get_solution(GB_new,subs_b);
+    substitution_list_b:=[ subs_b[g] : g in gens ];
+    sol_variables cat:=[substitution_list_b];
+    //[<k,subs_b[k]>: k in  Keys(subs_b)];
+end if;
+end for;
+
+
+function StartsWith(s, prefix)
+    return s[1..#prefix] eq prefix;
+end function;
+
+function EndsWith(s, suffix)
+    return s[#s-#suffix+1..#s] eq suffix;
+end function;
+
+// Given sol, an associative array mapping variable names (strings)
+// in the ring S_t (e.g., "Rt1a", "Rt1b", "St1a", "St1b", etc.)
+// to their computed values, this function returns a new associative array
+// with keys corresponding to the original variables (e.g., "Rt1", "St1", etc.)
+// using the relations:
+//   For i for which substitution was done:
+//       Rti = (Rtia)^16    and   Rti = (Rtib)^4
+//       Sti = (Stia)^16    and   Sti = (Stib)^4
+function RecoverOriginalSolution(sol)
+    newsol := AssociativeArray();
+    for key in Keys(sol) do
+        // Check if the key corresponds to a variable Rtia,Rtib,Stia,Stib,Xtia...
+        skey:=Sprint(key);
+        if (StartsWith(skey, "Rt") or StartsWith(skey, "St")) and 
+           (EndsWith(skey, "a") or EndsWith(skey, "b")) then
+            // Remove the final character ("a" or "b") to get the base name.
+            base := skey[1..#skey-1]; 
+            // Compute the candidate original value.
+            // We use the rule:
+            //   if key ends with "a": original = (value)^16
+            //   if key ends with "b": original = (value)^4
+            if EndsWith(skey, "a") then
+                candidate := sol[key]^16;
+            else 
+                candidate := sol[key]^4;
+            end if;
+            // If we already recovered a value for this base, ensure consistency.
+            if IsDefined(newsol, base) then
+                if newsol[base] ne candidate then
+                    error "Inconsistent values recovered for", base;
+                end if;
+            else
+                newsol[base] := candidate;
+            end if;
+
+        elif (StartsWith(skey, "Xt") or StartsWith(skey, "Yt")) and 
+           ( EndsWith(skey, "b")) then
+            base := skey[1..#skey-1];  // e.g., "Rt1" from "Rt1a"
+            // Compute the candidate original value.
+            // We use the rule:
+            //  if key ends with "b": original = (value)^8192
+            if EndsWith(skey, "b") then
+                candidate := sol[key]^8192;
+            end if;
+            // If we already recovered a value for this base, ensure consistency.
+            if IsDefined(newsol, base) then
+                if newsol[base] ne candidate then
+                    error "Inconsistent values recovered for", base;
+                end if;
+            else
+                newsol[base] := candidate;
+            end if;
+        else
+            // For any variable not in our substitution pattern, copy it over.
+            newsol[skey] := sol[key];
+        end if;
+    end for;
+    return newsol;
+end function;
+
+ass:=RecoverOriginalSolution(subs_b);
+array_ass:=[<k,ass[k]> : k in Keys(ass)];

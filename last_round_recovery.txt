@@ -1,0 +1,110 @@
+
+load "initial_setup.txt";
+
+
+System("python iterate_compute_equations.py");
+
+//linear_system.txt contains several linear systems 
+//(as many as iterations done at iterate_compute_equations.py)
+load "linear_system.txt";
+
+load "original_system.txt";
+
+
+
+//Functions to recover solutions from a Groebner basis
+IsVarPlusConstant := function(p)
+    mons := Monomials(p);
+    coefs := Coefficients(p);
+   
+    if #mons ne 2 then
+        return false, _, _;
+    end if;
+    
+    // Index corresponding to the constant term 
+    idx_const := [i : i in [1..#mons] | mons[i] eq 1];
+    if #idx_const ne 1 then
+        return false, _, _;  
+    end if;
+    
+    // The remaining term should be the variable term.
+    idx_var := [i : i in [1..#mons] | mons[i] ne 1];
+    if #idx_var ne 1 then
+        return false, _, _;
+    end if;
+    
+    // Check that the nonconstant term is exactly one variable to the first power.
+    supp := Support(mons[idx_var[1]]);
+    if #supp ne 1 then
+        return false, _, _;
+    end if;
+    exps := [x: x in Exponents(mons[idx_var[1]])| x ne 0];
+    if exps[1] ne 1 then
+        return false, _, _;
+    end if;
+    
+    // Check that the coefficient of the variable is 1.
+    if coefs[idx_var[1]] ne 1 then
+        return false, _, _;
+    end if;
+    
+    // If all conditions are met, then p = var + c.
+    return true, Name(P,supp[1]), coefs[idx_const[1]];
+end function;
+
+
+GB:=GroebnerBasis(&cat[x[1] : x in linear_system]);
+subs := AssociativeArray();
+names_P := [x : x in OrderedGenerators(P)];
+for i in [1..#names_P] do
+ subs[names_P[i]]:=names_P[i];
+end for;
+for x in GB do
+    if IsVarPlusConstant(x) then
+        flag, varName, constVal:=IsVarPlusConstant(x);
+        subs[varName]:=constVal;
+    end if;
+end for;
+
+gens := OrderedGenerators(P);
+substitution_list := [ subs[g] : g in gens ];
+
+get_solution:=function(GB,subs)
+substitution_list := [ subs[g] : g in gens ];
+    for x in GB do 
+        flag, varName, constVal:=IsVarPlusConstant(x);
+        if flag eq true then 
+            subs[varName]:=constVal;
+            substitution_list := [ subs[g] : g in gens ];
+        end if;
+    end for;
+    updt_GB:=[Evaluate(x,substitution_list) : x in GB];
+    updt_GB:=[x : x in updt_GB | x ne 0];
+    return subs;
+end function;
+
+simplify_list:=function(list,subs)
+    substitution_list := [ subs[g] : g in gens ];
+    updt_list:=[Evaluate(x,substitution_list) : x in list];
+    updt_list:=[x : x in updt_list | x ne 0];
+return updt_list;
+end function;
+
+
+//Recovering solutions
+
+
+GB_1:=[Factorization(x)[1][1]: x in GroebnerBasis([Evaluate(x,substitution_list): x in list_1])];
+GB_2:=[Factorization(x)[1][1]: x in GroebnerBasis([Evaluate(x,substitution_list): x in list_2])];
+subs_b:=get_solution(GB_1,subs);
+
+list_3_new:=simplify_list(list_3,subs_b);
+subs_b:=get_solution(GB_2,subs_b);
+list_4_new:=simplify_list(list_4,subs_b);
+
+GB_3:=[Factorization(x)[1][1]: x in GroebnerBasis([Evaluate(x,substitution_list): x in list_3_new])];
+GB_4:=[Factorization(x)[1][1]: x in GroebnerBasis([Evaluate(x,substitution_list): x in list_4_new])];
+
+print "Last round recovered:";
+GB_cte:=[x: x in GB | IsVarPlusConstant(x)];
+print "Solutions:", [psi(x): x in GB_cte cat GB_1 cat GB_2 cat GB_3 cat GB_4];

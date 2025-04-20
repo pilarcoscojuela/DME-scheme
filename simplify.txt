@@ -1,0 +1,4 @@
+
+ecs:=[reduce_vector_S([x^(2^6):x in ecs[1]]),reduce_vector_S([x^(2^11):x in ecs[2]]),reduce_vector_S([x^(2^10):x in ecs[3]]),reduce_vector_S([x:x in ecs[4]])];
+
+ecs_h:=[reduce_vector_S([x^(2^6):x in ecs_h[1]]),reduce_vector_S([x^(2^11):x in ecs_h[2]]),reduce_vector_S([x^(2^10):x in ecs_h[3]]),reduce_vector_S([x:x in ecs_h[4]])];
