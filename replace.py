@@ -44,5 +44,4 @@ def process_file(input_file, output_file):
         print(f"An error occurred: {e}")
 
 # Main execution
-if __name__ == '__main__':
-    process_file('result.txt', 'result_replaced.txt')
+process_file('result.txt', 'result_replaced.txt')
