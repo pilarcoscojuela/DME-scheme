@@ -12,7 +12,7 @@ This repository implements a structural attack against the DME-minus digital sig
   - Constructs the original system of equations (written to original_system.txt) following the framework introduced by Daniel Smith-Tone et al. Only four lists appear, corresponding to the known components of the public key in the DME-minus variant.
   - Instead of directly computing a Gröbner basis on the original system, the script generates an alternative equation system (written to result.txt) by introducing auxiliary variables (Rt, St, Kt, Lt, Zt, Wt, Xt, Yt, H).
   - The relations between auxiliary and original variables are written to linear_system.txt, drastically reducing the number of variables.
-  - In this toy example, all equations in result_replaced.txt are solved at once; however, introducing H-variables simplifies Gröbner basis computations by removing collisions before recovering Rt, St, Kt, Lt, Zt, Wt.
+  - In this toy example, all equations in result_replaced.txt are solved at once; however, introducing H-variables simplifies Gröbner basis computations by removing collisions before recovering Rt, St, Kt, Lt, Zt, Wt, Xt, Yt.
 
 - simplify.txt
   Simplifies exponent expressions (e.g., transforms Rt1^(2^3) * Xt1^(2^5) = T^5 into Rt1 * Xt1^(2^2) = (T^5)^(2^11)).
@@ -30,7 +30,7 @@ This repository implements a structural attack against the DME-minus digital sig
   original_system.txt, result.txt, result_replaced.txt, linear_system.txt.
 
 - last_round_recovery.txt (Magma)
-  Recovers completely polynomials before the last exponential map.
+  Recovers completely polynomials before the last exponential map, that is the variables R's, S's, K's, L's, Z's, W's, X's, Y's.
 
 ## Usage
 Run last_round_recovery.txt on Magma (version V2.21-5)
